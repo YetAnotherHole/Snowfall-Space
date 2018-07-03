@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "es2015",
+    "moduleResolution": "node",
+    "strict": true,
+    "importHelpers": true,
+    "skipLibCheck": true,
+    "noEmitOnError": true,
+    "noImplicitReturns": true,
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "lib": ["dom", "es6"],
+    "types": ["vue-typescript-import-dts"]
+  },
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

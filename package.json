@@ -1,0 +1,44 @@
+{
+  "name": "snowfall-space",
+  "version": "0.0.1",
+  "description": "An experimental all-platform app for creating snow space.",
+  "license": "MIT",
+  "scripts": {
+    "start": "parcel src/index.html",
+    "build": "rm -rf dist && NODE_ENV=production parcel build src/index.html --public-url ./",
+    "lint": "tslint --project tsconfig.json 'src/**/*.ts'",
+    "deploy": "gh-pages -d dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com:YetAnotherHole/Snowfall-Space.git"
+  },
+  "author": {
+    "name": "Sune Bear",
+    "email": "hi@sunebear.com",
+    "url": "http://sunebear.com"
+  },
+  "dependencies": {
+    "pixi.js": "^4.8.1",
+    "vue": "^2.5.16",
+    "vue-class-component": "^6.2.0",
+    "vue-i18n": "^8.0.0",
+    "vue-router": "^3.0.1",
+    "vuex": "^3.0.1",
+    "vuex-persistedstate": "^2.5.4"
+  },
+  "devDependencies": {
+    "@types/pixi.js": "^4.8.0",
+    "@vue/component-compiler-utils": "^2.0.0",
+    "gh-pages": "^1.2.0",
+    "parcel-bundler": "^1.9.4",
+    "pug": "^2.0.3",
+    "stylus": "^0.54.5",
+    "tslint": "^5.10.0",
+    "tslint-config-standard": "^7.1.0",
+    "typescript": "^2.9.2",
+    "vue-hot-reload-api": "^2.3.0",
+    "vue-template-compiler": "^2.5.16",
+    "vue-typescript-import-dts": "^4.0.0"
+  }
+}
