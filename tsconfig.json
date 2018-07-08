@@ -14,7 +14,11 @@
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "lib": ["dom", "es6"],
-    "types": ["vue-typescript-import-dts"]
+    "types": ["vue-typescript-import-dts", "element-ui"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/app/*"]
+    }
   },
   "exclude": [
     "node_modules",

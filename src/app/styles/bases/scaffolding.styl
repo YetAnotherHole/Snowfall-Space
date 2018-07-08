@@ -1,0 +1,20 @@
+@require 'normalize.css/normalize.css'
+
+body
+  -webkit-font-smoothing: antialiased
+  -moz-osx-font-smoothing: grayscale
+
+*
+  box-sizing: border-box
+  // Fixing CSS Transitions
+  // REF: https://www.binarymoon.co.uk/2014/02/fixing-css-transitions-in-google-chrome/
+  -webkit-transform: translateZ(0)
+  -webkit-backface-visibility: hidden
+  backface-visibility: hidden
+
+:focus
+  outline: none
+
+::selection
+  background-color: alpha($gray50, 50%)
+  color: $white

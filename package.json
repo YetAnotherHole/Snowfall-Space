@@ -19,8 +19,13 @@
     "url": "http://sunebear.com"
   },
   "dependencies": {
+    "normalize.css": "^8.0.0",
+    "p5": "^0.6.1",
     "pixi.js": "^4.8.1",
+    "pts": "^0.4.3",
+    "tone": "^0.12.80",
     "vue": "^2.5.16",
+    "vue-awesome": "^3.0.3",
     "vue-class-component": "^6.2.0",
     "vue-i18n": "^8.0.0",
     "vue-router": "^3.0.1",
