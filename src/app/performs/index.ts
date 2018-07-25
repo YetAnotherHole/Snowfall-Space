@@ -1,3 +1,5 @@
 export * from './shared'
 
-export * from './watercolor'
+export * from './shamisen-rain'
+export * from './snowflake-maker'
+export * from './watercolor-painter'

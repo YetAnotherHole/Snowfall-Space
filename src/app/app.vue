@@ -25,11 +25,16 @@ body
   padding: 0
 
 body
-  height: 100vh
-  width: 100vw
   line-height: 1.5
   font-size: 16px
   font-family: $globalFont
   background-color: $globalBackground
   color: $textColor
+  fullscreen()
+
+#app
+  fullscreen()
+
+  > *
+    fullscreen()
 </style>

@@ -1,0 +1,100 @@
+.dg
+  color: #555 !important
+  font-size: 12px !important
+  text-shadow: none !important
+
+.dg.main
+  position: absolute !important
+  z-index: 9999
+  margin: 0 !important
+  right: 24px
+  top: 24px
+  max-width: 245px !important
+  width: 50% !important
+
+  .close-button
+    height: 24px !important
+    line-height: 24px !important
+    border: none !important
+    width: 120px !important
+    border-radius: 30px
+    margin-top: 10px
+    right: 0
+    opacity: 0.9
+    background-color: #e5e5e5 !important
+    transition: 318ms !important
+
+    &:hover
+      background-color: #eeeeee !important
+
+  &::-webkit-scrollbar
+    background: #fafafa !important
+
+  &::-webkit-scrollbar-thumb
+    background: #bbb !important
+
+.dg.main > ul
+  border-radius: 4px
+  overflow: hidden
+  opacity: 0.85
+
+.dg > ul
+  &.closed
+    li:not(.folder)
+      border-bottom-width: 0 !important
+
+.dg li:not(.folder)
+  padding: 0px 4px 0 12px !important
+  background: #fafafa !important
+  border-bottom: 1px solid #ddd !important
+
+.dg li.save-row .button
+  text-shadow: none !important
+
+.dg li.folder
+  border: none !important
+  border-radius: 0 !important
+
+  li
+    padding-left: 25px !important
+
+  li.title
+    padding-left: 15px !important
+
+.dg li.title
+  background: #e5e5e5 !important
+
+.dg .cr.number
+  border-left: none !important
+  padding-left: 10px
+  transition: 318ms
+
+.dg .cr.function:hover,.dg .cr.boolean:hover
+  background: #fff !important
+
+.dg .c input[type=text]
+  background: #eeeeee !important
+  color: #808080 !important
+  padding-left: 10px !important
+  border-radius: 15px !important
+  transition: 318ms
+
+.dg .c input[type=text]:hover
+  background: #e2e2e2 !important
+
+.dg .c input[type=text]:focus
+  background: #e2e2e2 !important
+  color: #383838 !important
+
+.dg .c .slider-fg
+  background: #808080 !important
+  border-radius: 4px
+  transition: 168ms
+
+.dg .c .slider
+  background: #eeeeee !important
+  border-radius: 4px
+  transition: 318ms
+
+.dg .c .slider:hover
+  background: #e2e2e2 !important
