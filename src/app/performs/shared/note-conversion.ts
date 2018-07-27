@@ -2,8 +2,16 @@
  * To MIDI Number: C8  -> 108
  * To Note Name: 108 -> C8
  */
-const nameToNumber: any = {}
-const numberToNameMap: any = {}
+export const noteToMidiMap: any = {}
+export const midiToNoteMap: any = {}
+
+export interface INoteEvent {
+  name: string
+  midi: number
+  time?: number | string
+  velocity?: number
+  duration?: number | string
+}
 
 const init = () => {
   const A0 = 0x15 // First note
@@ -12,11 +20,11 @@ const init = () => {
   for (let n = A0; n <= C8; n++) {
     const octave = (n - 12) / 12 >> 0
     const name = pitchNames[n % 12] + octave
-    nameToNumber[name] = n
-    numberToNameMap[n] = name
+    noteToMidiMap[name] = n
+    midiToNoteMap[n] = name
   }
 }
 
 init()
 
-export const FULL_PITCH_RANGE: string[] = Object.keys(nameToNumber)
+export const FULL_PITCH_RANGE: string[] = Object.keys(noteToMidiMap)

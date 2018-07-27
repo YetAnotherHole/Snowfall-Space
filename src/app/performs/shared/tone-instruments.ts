@@ -10,7 +10,13 @@ interface IInstrumentOptions {
   pitches?: string[]
 }
 
-const soundfonts = require('../../assets/soundfonts/**/*.mp3')
+export const getSoundfonts = (): { [key: string]: any } => {
+  // @FIXME: app cradshed when dynamically require dirs
+  return {
+    shamisen: require('../../assets/soundfonts/shamisen/**/*.mp3')
+    // shamisen: require('../../assets/soundfonts/acoustic-grand-piano/**/*.mp3')
+  }
+}
 
 class SampleLoader {
 
@@ -32,6 +38,7 @@ class SampleLoader {
     const name = instrumentsOptions.name
     const pitches = instrumentsOptions.pitches || FULL_PITCH_RANGE
 
+    const soundfonts = getSoundfonts()
     const audios = soundfonts[name]
     const samples = pitches.reduce((acc: any, value) => {
       acc[value] = audios[value]

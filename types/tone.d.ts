@@ -28,7 +28,7 @@ declare namespace Type {
   type Hertz = number;
   type Frequency = number;
   type Gain = number;
-  type Notation = string; // Duration relative to a measure, e.g. 4n, 2m, 8t
+  type Notation = string | number; // Duration relative to a measure, e.g. 4n, 2m, 8t
 }
 
 interface Tone {
@@ -92,6 +92,7 @@ interface Tone {
 
   // Master
   toMaster(): Tone;
+  start: (time?: number) => Tone;
 }
 
 declare module Tone {
@@ -289,6 +290,14 @@ declare module Tone {
     dispose(): Tone.Clip;
   }
 
+  let Tremolo: {
+    new(frequency?: any, depth?: number): Tone.Tremolo; //TODO: Number || Object
+  };
+
+  interface Tremolo extends Tone {
+    dispose(): Tone.Compressor;
+  }
+
   let Compressor: {
     new(threshold?: any, ratio?: number): Tone.Compressor; //TODO: Number || Object
   };
@@ -392,6 +401,16 @@ declare module Tone {
     lowFrequency: Tone.Signal;
     low: GainNode;
     mid: GainNode;
+    dispose(): Tone.EQ3;
+  }
+
+
+  let Gain: {
+    new(gain?: any, units?: any);
+  };
+
+  interface Gain extends Tone {
+    gain: number;
     dispose(): Tone.EQ3;
   }
 
@@ -607,6 +626,7 @@ declare module Tone {
 
   interface Instrument extends Tone {
     volume: Tone.Signal;
+    loaded: boolean;
     triggerAttack(note: any, time?: Type.Time, velocity?: number): Tone.Instrument; //Todo: string | number
     triggerAttackRelease(note: any, duration: Type.Time, time?: Type.Time, velocity?: number): Tone.Instrument; //Todo: string | number
     triggerRelease(time?: Type.Time): Tone.Instrument;
@@ -614,12 +634,21 @@ declare module Tone {
   }
 
   let JCReverb: {
-    new(roomSize: number): Tone.JCReverb; //TODO: Number || Object
+    new(roomSize?: number): Tone.JCReverb; //TODO: Number || Object
   };
 
   interface JCReverb extends Tone.Effect {
     roomSize: Tone.Signal;
     dispose(): Tone.JCReverb;
+  }
+
+  let Reverb: {
+    new(decay?: number): Tone.Reverb;
+  };
+
+  interface Reverb extends Tone.Effect {
+    decay: Tone.Signal;
+    dispose(): Tone.Reverb;
   }
 
   let LessThan: {
@@ -1183,6 +1212,7 @@ declare module Tone {
     dispose(): Tone.Sampler;
     triggerAttack(sample?: string, time?: Type.Time, velocity?: number): Tone.Sampler;
     triggerRelease(time?: Type.Time): Tone.Sampler;
+    release: number;
   }
 
   let Scale: {
@@ -1418,7 +1448,7 @@ declare module Tone {
     cancel(after: Type.Time): Tone.Transport;
     dispose(): Tone.Transport;
     nextSubdivision(subdivision: Type.Time): number;
-    pause(time: Type.Time): Tone.Transport;
+    pause(time?: Type.Time): Tone.Transport;
     schedule(callback: (e: any) => any, time: Type.Time): number;
     scheduleOnce(callback: (e: any) => any, time: Type.Time): number;
     scheduleRepeat(callback: (e: any) => any, interval: Type.Time, startTime?: Type.Time, duration?: Type.Time): number;

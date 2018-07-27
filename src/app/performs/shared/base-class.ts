@@ -46,8 +46,10 @@ export abstract class BaseConductor {
 
   // The abstract functions, need to implement by derived class
   abstract setup? (): void
-  abstract update? (): void
-  abstract destory? (): void
+  abstract update? (lastTime: number): void
+  onmount? (): void
+  onunmount? (): void
+  onresize? (screenWidth: number, screenHeight: number): void
 
   public mount = ($container: HTMLElement) => {
     console.log('Conductor mounted')
@@ -78,6 +80,10 @@ export abstract class BaseConductor {
     })
 
     window.addEventListener('resize', this.handleResize)
+
+    if (this.onmount) {
+      this.onmount()
+    }
   }
 
   public unmount = () => {
@@ -89,22 +95,27 @@ export abstract class BaseConductor {
     this.removeGUI()
 
     this.shouldUpdate = false
+    this.app.stage.removeChildren()
     this.app.stop()
 
     window.removeEventListener('resize', this.handleResize)
 
-    if (this.destory) {
-      this.destory()
+    if (this.onunmount) {
+      this.onunmount()
     }
   }
 
   private handleResize = debounce(() => {
+    const width = window.innerWidth
+    const height = window.innerHeight
+
     // Resize the renderer
-    this.app.renderer.resize(
-      window.innerWidth,
-      window.innerHeight
-    )
+    this.app.renderer.resize(width, height)
+
     // @TODO: handle stage elements resize
+    if (this.onresize) {
+      this.onresize(width, height)
+    }
   })
 
   private removeGUI () {
@@ -117,9 +128,9 @@ export abstract class BaseConductor {
     } catch (error) {}
   }
 
-  private updater () {
+  private updater (lastTime: number) {
     if (this.update) {
-      this.update()
+      this.update(lastTime)
     }
   }
 
