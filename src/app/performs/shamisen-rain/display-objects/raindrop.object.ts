@@ -17,9 +17,9 @@ export class $$Raindrop extends $$Base {
   setup () {
     this.options = {
       x: 0,
-      gravity: 0.2,
+      gravity: window.innerHeight / 2400,
       size: 20,
-      color: COLORS.LIGHT_WHITE,
+      color: COLORS.GRAY_80,
       ...this.options
     }
 
@@ -28,11 +28,14 @@ export class $$Raindrop extends $$Base {
     this.$object = new PIXI.Graphics()
     this.$object.x = x
     this.$object.y = -size * 2
+    this.$object.alpha = 0.95
 
     this.$object.beginFill(color)
-    this.$object.drawCircle(0, 0, size)
+    this.$object.arc(size / 2, size / 2, size, 0, Math.PI, false)
+	  this.$object.lineTo(size / 2, -(size * 1.5))
+    this.$object.lineTo(size * 1.5, size / 2)
 
-    this.spend = 10
+    this.spend = window.innerHeight / 200
   }
 
   getNote () {
@@ -43,11 +46,25 @@ export class $$Raindrop extends $$Base {
     return this.$object.y > containerHeight
   }
 
-  dropAction () {
-    const { gravity } = this.options
+  dropAction (windforce = 0) {
+    const { gravity, note } = this.options
+    let rotation = 0
+
+    if (note.time) {
+      windforce = (note.time / 10) & 2 ? 1.4 : -1.4
+    }
+
+    windforce = Math.min(windforce, 5)
+    windforce = Math.max(windforce, -5)
+
+    if (windforce) {
+      rotation = windforce > 0 ? 0.015 : -0.015
+    }
 
     this.spend += gravity
+    this.$object.x += windforce
     this.$object.y += this.spend
+    this.$object.rotation += rotation
   }
 
 }

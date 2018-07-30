@@ -1115,6 +1115,9 @@ declare module Tone {
     autostart: boolean;
     buffer: Tone.Buffer;
     duration: number;
+    fadeIn: number;
+    fadeOut: number;
+    volume: Tone.Signal;
     loop: boolean;
     loopEnd: Type.Time;
     loopStart: Type.Time;
@@ -1124,6 +1127,18 @@ declare module Tone {
     load(url: string, callback?: (e: any) => any): Tone.Player;
     seek(offset: Type.Time, time?: Type.Time): Tone.Player;
     setLoopPoints(loopStart: Type.Time, loopEnd: Type.Time): Tone.Player;
+  }
+
+  let Players: {
+    new(urls?: any, onload?: (e: any) => any): Tone.Player;
+  };
+
+  interface Players extends Tone {
+    loaded: boolean;
+    state: string;
+    volume: Tone.Signal;
+    get(name: string): Tone.Player;
+    toMaster(): Tone;
   }
 
   let PluckSynth: {

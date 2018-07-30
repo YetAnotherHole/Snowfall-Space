@@ -1,5 +1,5 @@
 <template lang="pug">
-.page-playground
+.page-playground( :class="[ currentPerform.name ]" )
 
   .control-layer
     ss-dropdown.menu-handler
@@ -22,7 +22,9 @@
       | {{ currentPerform.title }}
 
   .perform-layer
-    .perform-container( ref="performContainer" )
+    .perform-container(
+      ref="performContainer"
+    )
 </template>
 
 <script lang="ts">
@@ -134,6 +136,15 @@ export default class extends Vue {
 @require '../styles/ref'
 
 .page-playground
+  transition: background 318ms
+
+  &.shamisen-rain
+    background-color: $gray90
+
+    .control-layer,
+    .btn-default.is-ghost,
+    .dropdown
+      color: $black !important
 
   [class*='-layer']
     transition: all 318ms
@@ -148,6 +159,7 @@ export default class extends Vue {
   .control-layer
     z-index: 2
     width: 100%
+    color: $gray90
 
     > *
       position: absolute
@@ -159,7 +171,6 @@ export default class extends Vue {
     .playground-name
       left: 76px
       line-height: 46px
-      color: $gray90
       text-bold()
 
   .perform-layer

@@ -37,4 +37,5 @@ body
 
   > *
     fullscreen()
+    overflow: hidden
 </style>

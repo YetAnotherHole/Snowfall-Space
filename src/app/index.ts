@@ -1,4 +1,5 @@
 // @FIXIME: Uses `export from` syntax
+require('./utils/polyfill')
 import App from './app.vue'
 
 export { App }

@@ -16,6 +16,7 @@ import {
 
 import {
   satieGymnopedieN1NoteEvents,
+  traditionalJapanNoteEvents,
   // raindropPreludeNoteEvents,
   generatePentatonicScaleNoteEvents,
   generateFBMNoteEvents
@@ -24,8 +25,11 @@ import {
 // @TODO: Optimize experience for vision and hearing
 // @TODO: Support dynamic sequence, auto switch to next sequence if current was ended
 class ShamisenRainConductor extends BaseConductor {
+  private ambient: Tone.Players
   private shamisen: Tone.Sampler
-  private sequence: Tone.Part
+
+  private bass: Tone.Sequence
+  private melody: Tone.Part
 
   // Particles
   private drops: $$Raindrop[]
@@ -37,8 +41,10 @@ class ShamisenRainConductor extends BaseConductor {
   setup () {
     this.showLoading()
 
+    this.ambient = toneInstruments['ambient']
     this.shamisen = toneInstruments['shamisen']
-    this.sequence = this.generateRandomSequence()
+    this.melody = this.generateRandomMelody()
+    this.bass = this.generateBass()
 
     // Listen page visibility
     if (visibility.state() === 'hidden') {
@@ -78,11 +84,14 @@ class ShamisenRainConductor extends BaseConductor {
 
         this.shamisen.triggerAttackRelease(
           note.name,
-          note.duration,
+          note.duration / 2,
           Tone.now(),
           note.velocity
         )
-        this.$$sky.thunder(power)
+        this.$$sky.thunder(
+          power,
+          this.playThunder
+        )
 
         this.drops.splice(index, 1)
         $$drop.destroy()
@@ -125,14 +134,27 @@ class ShamisenRainConductor extends BaseConductor {
 
     return new $$Raindrop({
       note,
-      color: power ? COLORS.SOFT_YELLOW : COLORS.LIGHT_WHITE,
-      x: Math.floor(Math.random() * width)
+      color: power ? COLORS.YELLOW_700 : COLORS.GRAY_BLACK,
+      x: this.generateRandomRaindropX()
     })
   }
 
-  generateRandomSequence (): Tone.Part {
+  generateRandomRaindropX (): number {
+    const { width } = this.app.screen
+    const x = Math.floor(Math.random() * width)
+    const middleGap = width * 0.1
+
+    if (Math.abs((width / 2 - x)) < middleGap) {
+      return this.generateRandomRaindropX()
+    }
+
+    return x
+  }
+
+  generateRandomMelody (): Tone.Part {
     const eventsSet = [
-      satieGymnopedieN1NoteEvents
+      traditionalJapanNoteEvents
+      // satieGymnopedieN1NoteEvents
       // raindropPreludeNoteEvents
       // generatePentatonicScaleNoteEvents()
       // generateFBMNoteEvents()
@@ -141,7 +163,7 @@ class ShamisenRainConductor extends BaseConductor {
     const events = randomChoice(eventsSet)
 
     const part = new Tone.Part((time, note) => {
-      this.handleSequenceNoteEmit(note)
+      this.handleMelodyNoteEmit(note)
     }, events).start(0)
 
     part.loopEnd = parseInt(events[events.length - 1].time, 10)
@@ -150,44 +172,102 @@ class ShamisenRainConductor extends BaseConductor {
     return part
   }
 
-  handleLoaded () {
-    const reverb = new Tone.Freeverb(0.8).toMaster()
-    const tremolo = new Tone.Tremolo(9, 0.75).toMaster().start()
-    const gain = new Tone.Gain(2.5).toMaster()
+  generateBass (): Tone.Sequence {
+    const sequence = [
+      'C1', 'F1'
+    ]
 
+    const bass = new Tone.Sequence((time, name) => {
+      const note = {
+        name,
+        midi: noteToMidiMap[name],
+        duration: 10,
+        velocity: 0.1
+      }
+      this.handleBassNoteEmit(note)
+    }, sequence, '1m')
+
+    bass.start(0)
+    bass.loop = true
+
+    return bass
+  }
+
+  handleLoaded () {
     this.hideLoading()
+
+    // Backgroundsound
+    this.ambient.toMaster()
+    const backgroundEvents = [
+      'rain-heavy',
+      'rain-soft'
+    ]
+    backgroundEvents.map(value => {
+      const player = this.ambient.get(value)
+      if (value === 'rain-heavy') {
+        player.volume.setValueAtTime(-22, 0.1)
+      } else {
+        player.volume.setValueAtTime(-5, 0.1)
+      }
+      player.fadeIn = 2
+      player.loop = true
+      player.sync().start()
+    })
+
+    // Frontsound
+    const pingPong = new Tone.PingPongDelay({
+      delayTime: '4n',
+			wet: 0.3
+    }).toMaster()
+    const reverb = new Tone.Freeverb(0.8).toMaster()
+    const gain = new Tone.Gain(1.2).toMaster()
     this.shamisen
       .connect(reverb)
-      .connect(tremolo)
       .connect(gain)
+      .connect(pingPong)
       .toMaster()
+    this.shamisen.release = 1
+    this.shamisen.volume.setValueAtTime(-12, 0.1)
 
-    this.shamisen.release = 10
-    Tone.Transport.bpm.value = 60
+    // Main timeline
+    Tone.Transport.bpm.value = 50
     Tone.Transport.start()
 
     console.log(
       'Shamisen',
       this.shamisen,
       Tone.Transport,
-      this.sequence
+      this.melody
     )
   }
 
-  handleSequenceNoteEmit (note: INoteEvent) {
+  handleMelodyNoteEmit (note: INoteEvent) {
     const $$raindrop = this.genereateRainDrop(note)
+    $$raindrop.appendTo(this.app.stage)
+    this.drops.push($$raindrop)
+  }
+
+  handleBassNoteEmit (note: INoteEvent) {
+    const { width } = this.app.screen
+    const $$raindrop = new $$Raindrop({
+      note,
+      x: width / 2
+    })
     $$raindrop.appendTo(this.app.stage)
     this.drops.push($$raindrop)
   }
 
   computePowerByMidi (midi: number): number {
     let power = 0
+    const middleMidi = noteToMidiMap['A4']
+    const midiDiff = Math.abs(middleMidi - midi)
+    const threshold = 10
 
     if (
-      noteToMidiMap['C5'] - midi > 0 &&
-      midi & 2
+      midiDiff - threshold > 0 &&
+      midi % 2
     ) {
-      power = midi / 120
+      power = midiDiff / 90
     }
 
     return power
@@ -200,11 +280,34 @@ class ShamisenRainConductor extends BaseConductor {
     displayObject.anchor.y = 0.5
   }
 
+  playThunder = (power: number): void => {
+    const threshold = 0.4
+
+    const thunderName = randomChoice([
+      'thunder-close-long',
+      'thunder-distant-quite',
+      'thunder-middle-fast',
+      'thunder-slow-chill'
+    ])
+    const player = this.ambient.get(thunderName)
+
+    if (
+      power < threshold ||
+      player.state !== 'stopped'
+    ) {
+      return
+    }
+
+    player.volume.setValueAtTime(-10, 0.1)
+    player.fadeIn = 1
+    player.start()
+  }
+
   showLoading () {
     this.$loading = new PIXI.Text(__('perform.shamisenRain.loading'), {
       fontFamily: FONT_FAMILY,
       fontSize: 26,
-      fill: COLORS.LIGHT_WHITE
+      fill: COLORS.GRAY_BLACK
     })
 
     this.alignMiddleAndCenter(this.$loading)

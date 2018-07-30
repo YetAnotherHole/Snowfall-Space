@@ -24,6 +24,10 @@ export const satieGymnopedieN1NoteEvents = generateMidiPartNoteEvents(
   require('./midi-json/satie-gymnopedie-n1.json')
 )
 
+export const traditionalJapanNoteEvents = generateMidiPartNoteEvents(
+  require('./midi-json/traditional-japan.json')
+)
+
 const pentatonicScaleNotes: string[] = [
   'C2', 'Eb2', 'F2', 'G2', 'Bb2',
   'C3', 'Eb3', 'F3', 'G3', 'Bb3',
