@@ -36,44 +36,46 @@ import { __ } from '../services/i18n'
 import { PATHS } from '../router'
 import {
   BaseConductor,
-  shamisenRainConductor,
-  snowflakeMakerConductor,
-  watercolorPainterConductor
+  ShamisenRainConductor,
+  SnowflakeMakerConductor,
+  WatercolorWitcherConductor
 } from '../performs'
 
 interface PerformItem {
   name: string,
   title: string,
-  conductor: BaseConductor
+  Conductor: any
 }
 
 const DEFAULT_PERFORM_NAME = 'shamisen-rain'
 
 // Register the router hooks with their names
 Component.registerHooks([
-  'beforeRouteUpdate'
+  'beforeRouteUpdate',
+  'beforeRouteLeave'
 ])
 
 @Component
 export default class extends Vue {
+  conductor: BaseConductor
 
   performs: PerformItem[] = [
     {
       name: 'shamisen-rain',
       title: __('perform.shamisenRain.name'),
-      conductor: shamisenRainConductor
+      Conductor: ShamisenRainConductor
     },
 
     {
-      name: 'watercolor-painter',
-      title: __('perform.watercolorPainter.name'),
-      conductor: watercolorPainterConductor
+      name: 'watercolor-witcher',
+      title: __('perform.watercolorWitcher.name'),
+      Conductor: WatercolorWitcherConductor
     },
 
     {
       name: 'snowflake-maker',
       title: __('perform.snowflakeMaker.name'),
-      conductor: snowflakeMakerConductor
+      Conductor: SnowflakeMakerConductor
     }
   ]
 
@@ -102,17 +104,22 @@ export default class extends Vue {
 
   beforeRouteUpdate (to: Route, from: Route, next: any) {
     // Route: From
-    const fromConductor = this.currentPerform.conductor
-    fromConductor.unmount()
+    this.conductor.unmount()
 
     // Route: To
     next()
     this.renderCurrentPerform()
   }
 
+  beforeRouteLeave (to: Route, from: Route, next: any) {
+    this.conductor.unmount()
+
+    next()
+  }
+
   renderCurrentPerform () {
-    const conductor = this.currentPerform.conductor
-    conductor.mount(this.$peformContainer as HTMLElement)
+    this.conductor = new this.currentPerform.Conductor()
+    this.conductor.mount(this.$peformContainer as HTMLElement)
   }
 
   handleReturnAppClick () {
@@ -145,6 +152,9 @@ export default class extends Vue {
     .btn-default.is-ghost,
     .dropdown
       color: $black !important
+
+  &.watercolor-witcher
+    background-color: $darkCyan
 
   [class*='-layer']
     transition: all 318ms

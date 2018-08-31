@@ -1,7 +1,6 @@
 import * as PIXI from 'pixi.js'
 import { COLORS } from '../../../utils/constants'
-import { INoteEvent } from '../../shared'
-import { $$Base } from './base-class'
+import { INoteEvent, $$Base } from '../../shared'
 
 export interface I$$RaindropOptions {
   x?: number

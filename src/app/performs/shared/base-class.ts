@@ -10,6 +10,53 @@ if (module.hot) {
   })
 }
 
+interface IOptions {
+  [key: string]: any
+}
+
+export abstract class $$Base {
+  protected defaultOptions: IOptions
+  protected options: IOptions = {}
+  $object: PIXI.Graphics
+  $container: PIXI.Container
+
+  constructor (options?: IOptions) {
+    this.options = {
+      ...this.defaultOptions,
+      ...options
+    }
+
+    if (this.setup) {
+      this.setup(options)
+    }
+  }
+
+  resize (screenWidth: number, screenHeight: number) {
+    if (this.onresize) {
+      this.onresize(screenWidth, screenHeight)
+    }
+  }
+
+  abstract setup? (options?: IOptions): void
+  // @FIXME: Optional abstract members
+  // https://github.com/Microsoft/TypeScript/issues/6413
+  onresize? (screenWidth: number, screenHeight: number): void
+
+  appendTo ($container: PIXI.Container, index: number = 0) {
+    this.$container = $container
+    $container.addChild(this.$object)
+    $container.setChildIndex(this.$object, index)
+  }
+
+  destroy () {
+    this.$object.destroy()
+  }
+
+}
+
+export interface IBaseConductorOptions {
+}
+
 export abstract class BaseConductor {
 
   protected app: PIXI.Application
@@ -17,7 +64,7 @@ export abstract class BaseConductor {
   protected datGUI: dat.GUI
   protected shouldUpdate: boolean
 
-  constructor () {
+  constructor (options: IBaseConductorOptions = {}) {
     // Remove PIXI banner from the console
     PIXI.utils.sayHello = () => {}
 
@@ -52,12 +99,12 @@ export abstract class BaseConductor {
   onresize? (screenWidth: number, screenHeight: number): void
 
   public mount = ($container: HTMLElement) => {
-    console.log('Conductor mounted')
+    console.log(`${this.constructor.name} mounted`)
 
     this.$container = $container
 
     // Append views
-    this.app.stage.alpha = 0
+    this.app.view.style.opacity = '0'
     this.datGUI.domElement.style.opacity = '0'
     if (this.datGUI.__controllers.length) {
       $container.appendChild(this.datGUI.domElement)
@@ -69,11 +116,9 @@ export abstract class BaseConductor {
     this.app.ticker.add(this.updater, this)
     this.shouldUpdate = true
 
-    // enable enter transition
-    // @FIXME: Remove blink bug
+    // Enable enter transition
     anime({
-      targets: [ this.app.stage, this.datGUI.domElement ],
-      alpha: 1, // For PIXI element
+      targets: [ this.app.view, this.datGUI.domElement ],
       opacity: 1, // For DOM
       duration: 568,
       easing: 'easeInSine'
@@ -91,12 +136,12 @@ export abstract class BaseConductor {
       return
     }
 
-    this.$container.removeChild(this.app.view)
-    this.removeGUI()
-
     this.shouldUpdate = false
     this.app.stage.removeChildren()
     this.app.stop()
+
+    this.$container.removeChild(this.app.view)
+    this.removeGUI()
 
     window.removeEventListener('resize', this.handleResize)
 
@@ -131,6 +176,17 @@ export abstract class BaseConductor {
   private updater (lastTime: number) {
     if (this.update) {
       this.update(lastTime)
+    }
+  }
+
+  // Layout Methods
+  public alignCenterAndMiddle (displayObject: PIXI.Sprite | any) {
+    displayObject.x = this.app.screen.width / 2
+    displayObject.y = this.app.screen.height / 2
+
+    if (displayObject.anchor) {
+      displayObject.anchor.x = 0.5
+      displayObject.anchor.y = 0.5
     }
   }
 

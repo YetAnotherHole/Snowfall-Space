@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js'
 import anime from 'animejs'
-import { $$Base } from './base-class'
+import { $$Base } from '../../shared'
 
 export class $$Sky extends $$Base {
   isThundering: boolean

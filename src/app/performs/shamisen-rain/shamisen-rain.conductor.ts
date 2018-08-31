@@ -15,18 +15,19 @@ import {
 } from '../shared'
 
 import {
-  satieGymnopedieN1NoteEvents,
-  traditionalJapanNoteEvents,
+  // satieGymnopedieN1NoteEvents,
   // raindropPreludeNoteEvents,
-  generatePentatonicScaleNoteEvents,
+  // generatePentatonicScaleNoteEvents,
+  traditionalJapanNoteEvents,
   generateFBMNoteEvents
 } from './note-events'
 
 // @TODO: Optimize experience for vision and hearing
 // @TODO: Support dynamic sequence, auto switch to next sequence if current was ended
-class ShamisenRainConductor extends BaseConductor {
+export class ShamisenRainConductor extends BaseConductor {
   private ambient: Tone.Players
   private shamisen: Tone.Sampler
+  private visibilityId: number | boolean
 
   private bass: Tone.Sequence
   private melody: Tone.Part
@@ -45,29 +46,6 @@ class ShamisenRainConductor extends BaseConductor {
     this.shamisen = toneInstruments['shamisen']
     this.melody = this.generateRandomMelody()
     this.bass = this.generateBass()
-
-    // Listen page visibility
-    if (visibility.state() === 'hidden') {
-      return Tone.Transport.pause()
-    }
-
-    visibility.change((e, state) => {
-      if (state === 'hidden') {
-        Tone.Transport.pause()
-      } else {
-        Tone.Transport.start()
-      }
-    })
-
-    if (Tone.Transport.state !== 'stopped') {
-      window.location.reload()
-      return this.hideLoading()
-    }
-
-    // Handle loaded
-    Tone.Buffer.on('load', () => {
-      this.handleLoaded()
-    })
   }
 
   update (lastTime: number) {
@@ -102,6 +80,29 @@ class ShamisenRainConductor extends BaseConductor {
   onmount () {
     this.initObjects()
 
+    // Listen page visibility
+    if (visibility.state() === 'hidden') {
+      return Tone.Transport.pause()
+    }
+
+    this.visibilityId = visibility.change((e, state) => {
+      if (state === 'hidden') {
+        Tone.Transport.pause()
+      } else {
+        Tone.Transport.start()
+      }
+    })
+
+    if (Tone.Transport.state !== 'stopped') {
+      window.location.reload()
+      return this.hideLoading()
+    }
+
+    // Handle loaded
+    Tone.Buffer.on('load', () => {
+      this.handleLoaded()
+    })
+
     if (
       Tone.Transport.state === 'stopped' &&
       this.shamisen.loaded
@@ -112,6 +113,7 @@ class ShamisenRainConductor extends BaseConductor {
 
   onunmount () {
     Tone.Transport.stop()
+    visibility.unbind(this.visibilityId as number)
   }
 
   onresize (width: number, height: number) {
@@ -205,7 +207,7 @@ class ShamisenRainConductor extends BaseConductor {
     backgroundEvents.map(value => {
       const player = this.ambient.get(value)
       if (value === 'rain-heavy') {
-        player.volume.setValueAtTime(-22, 0.1)
+        player.volume.setValueAtTime(-27, 0.1)
       } else {
         player.volume.setValueAtTime(-5, 0.1)
       }
@@ -273,13 +275,6 @@ class ShamisenRainConductor extends BaseConductor {
     return power
   }
 
-  alignMiddleAndCenter (displayObject: PIXI.Sprite) {
-    displayObject.x = this.app.screen.width / 2
-    displayObject.y = this.app.screen.height / 2
-    displayObject.anchor.x = 0.5
-    displayObject.anchor.y = 0.5
-  }
-
   playThunder = (power: number): void => {
     const threshold = 0.4
 
@@ -310,7 +305,7 @@ class ShamisenRainConductor extends BaseConductor {
       fill: COLORS.GRAY_BLACK
     })
 
-    this.alignMiddleAndCenter(this.$loading)
+    this.alignCenterAndMiddle(this.$loading)
     this.app.stage.addChild(this.$loading)
   }
 
@@ -322,5 +317,3 @@ class ShamisenRainConductor extends BaseConductor {
   }
 
 }
-
-export const shamisenRainConductor = new ShamisenRainConductor()
