@@ -9,7 +9,7 @@ import { $$Raindrop, $$Sky } from './display-objects'
 import {
   BaseConductor,
   INoteEvent,
-  toneInstruments,
+  SampleLoader,
   midiToNoteMap,
   noteToMidiMap
 } from '../shared'
@@ -41,6 +41,8 @@ export class ShamisenRainConductor extends BaseConductor {
 
   setup () {
     this.showLoading()
+
+    const toneInstruments = new SampleLoader().exportInstruments()
 
     this.ambient = toneInstruments['ambient']
     this.shamisen = toneInstruments['shamisen']

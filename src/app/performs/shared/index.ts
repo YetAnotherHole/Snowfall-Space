@@ -1,7 +1,14 @@
+// Style
 import './styles/dat-gui-light-theme.styl'
 
+// Base
+export * from './base-class'
+
+// Visual: GLSL Filters
 export * from './filters'
 
-export * from './base-class'
-export * from './note-conversion'
-export * from './tone-instruments'
+// Audio: Sheet Music & Tone
+export * from './audio'
+
+// Module: Snowflake
+export * from './snowflake'

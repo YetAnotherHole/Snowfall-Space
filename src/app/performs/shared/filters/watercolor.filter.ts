@@ -1,12 +1,13 @@
 import * as PIXI from 'pixi.js'
 
-const vertex = require('./watercolor.filter.vert')
+// const vertex = require('./default.vert')
 // @TODO: Ink, Oil -> Watercolor
 // @TODO: Optimize watercolor filter fragment
 const fragment = require('./archives/chinese-ink.filter.frag')
 
 interface WatercolorFilterUniform {
   [key: string]: any
+  // Kuwahara-oil arguments
   texel?: number[]
   scale?: number // Wobble scale [0, 0.2]
   threshold?: number // Edge threshold [0, 1]
@@ -29,7 +30,7 @@ export class WatercolorFilter extends PIXI.Filter<WatercolorFilterUniform> {
   }
 
   constructor (options?: IWatercolorFilterOptions) {
-    super(vertex, fragment)
+    super(undefined, fragment)
 
     this.options = {
       ...this.defaultOptions,

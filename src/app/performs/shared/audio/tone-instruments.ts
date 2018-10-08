@@ -14,13 +14,13 @@ export const getSoundfonts = (): { [key: string]: any } => {
   // @FIXME: app cradshed when dynamically require dirs
   return {
     // @REF: https://github.com/e1r0nd/rainy-mood
-    ambient: require('../../assets/soundfonts/ambient/**/*.mp3'),
-    shamisen: require('../../assets/soundfonts/shamisen/**/*.mp3')
-    // shamisen: require('../../assets/soundfonts/acoustic-grand-piano/**/*.mp3')
+    ambient: require('../../../assets/soundfonts/ambient/**/*.mp3'),
+    shamisen: require('../../../assets/soundfonts/shamisen/**/*.mp3')
+    // shamisen: require('../../../assets/soundfonts/acoustic-grand-piano/**/*.mp3')
   }
 }
 
-class SampleLoader {
+export class SampleLoader {
 
   private defualtInstumentsOptions: IInstrumentOptions[] = [
     {
@@ -79,6 +79,6 @@ class SampleLoader {
 
 }
 
-const sampleLoader = new SampleLoader()
+// const sampleLoader = new SampleLoader()
 
-export const toneInstruments = sampleLoader.exportInstruments()
+// export const toneInstruments = sampleLoader.exportInstruments()

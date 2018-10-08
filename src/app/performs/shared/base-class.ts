@@ -11,19 +11,19 @@ if (module.hot) {
 }
 
 interface IOptions {
-  [key: string]: any
+  [ key: string ]: any
 }
 
-export abstract class $$Base {
-  protected defaultOptions: IOptions
-  protected options: IOptions = {}
-  $object: PIXI.Graphics
+export abstract class $$Base<T = IOptions> {
+  protected defaultOptions: T
+  protected options: T
+  $object: PIXI.Graphics | PIXI.Sprite | PIXI.Container
   $container: PIXI.Container
 
-  constructor (options?: IOptions) {
+  constructor (options?: T) {
     this.options = {
-      ...this.defaultOptions,
-      ...options
+      ...this.defaultOptions as any,
+      ...options as any
     }
 
     if (this.setup) {
