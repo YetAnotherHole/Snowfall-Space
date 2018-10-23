@@ -2,7 +2,7 @@ import { Grid, Hex } from 'honeycomb-grid'
 
 // The Parameters ordered by the paper
 export interface IGrowthModelParameters {
-  [key: string]: number
+  [key: string]: number | any
   rho: number // ρ, Initial vapor density
   // For Attachment
   beta: number // β, Anisotropy of attachment [1.05, 3] - how much harder it is to freeze to a mesoscopically protruding or flat chunk of boundary than in a valley
@@ -14,7 +14,7 @@ export interface IGrowthModelParameters {
   mu: number // µ
   gamma: number // γ
   // For Noise
-  sigma: number // σ, Noise
+  sigma?: number // σ, Noise
 }
 
 interface IGrowthModelHexState {
@@ -44,6 +44,7 @@ export interface ISnowflakeSchema extends IGrowthModelEnv {
 }
 
 interface SnowflakeGrowthModelOptions {
+  renderer: PIXI.WebGLRenderer
   snowflakeInput: IGrowthModelEnv | ISnowflakeSchema
 }
 
@@ -107,6 +108,16 @@ export abstract class BaseGrowthModel {
     }
 
     return this.snowflakeData
+  }
+
+  protected evolveGeneration () {
+    const $hasNextGeneration = this.snowflakeData.generation < GROWTH_MODEL_MAX_GENERATION
+
+    if (!$hasNextGeneration) {
+      return this.updateStatus('completed')
+    }
+
+    this.snowflakeData.generation++
   }
 
 }

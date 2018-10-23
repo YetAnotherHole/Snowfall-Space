@@ -10,7 +10,7 @@ interface IGrowthModel2DRenderOptions {
   growthModel: SnowflakeGrowthModelOnCore
 }
 
-export class $$GrowthModel2DRender extends $$Base<IGrowthModel2DRenderOptions> {
+export class $$GrowthModel2DRenderLegacy extends $$Base<IGrowthModel2DRenderOptions> {
   // @TODO: Use PIXI.particles & PIXI.Sprite to get a nice speed boost
   attachedCellMap: { [key: string]: PIXI.Graphics }
   $lines: PIXI.Graphics
@@ -87,6 +87,7 @@ export class $$GrowthModel2DRender extends $$Base<IGrowthModel2DRenderOptions> {
       }
 
       const $attachedCell = this.attachedCellMap[hexString]
+
       if (hex.attached) {
         $attachedCell.alpha = 1
       } else {

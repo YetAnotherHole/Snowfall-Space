@@ -8,6 +8,10 @@
 import Vue from 'vue'
 import Component from 'vue-class-component'
 
+Vue.config.errorHandler = (error) => {
+  console.log('Vue Global OnError', error)
+}
+
 @Component
 export default class extends Vue {
 

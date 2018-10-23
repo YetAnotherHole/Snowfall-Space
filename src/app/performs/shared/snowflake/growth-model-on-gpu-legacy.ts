@@ -1,5 +1,6 @@
 // Yet Another Gravner & Griffeath Quadratic Lattice Model
-// But based on the GPU
+// But based on GPU
+// @REF: https://github.com/richardcooper/snowflakes
 // @TODO: Optimize FPS for growthing a snowflake within a opus period
 
 import * as PIXI from 'pixi.js'
@@ -9,54 +10,41 @@ import {
   BaseGrowthModel
 } from './base'
 
-import {
-  ShaperSprite,
-  createShaderPlugin,
-  createShaderPluginSprite
-} from '../../../utils/shader'
-
 const snowflakeComputationVertexShader = `
     attribute vec2 aTextureCoord;
     attribute vec2 aVertexPosition;
 
     varying vec2 centrePos;
-    varying vec2 n0;
-    varying vec2 n1;
-    varying vec2 n2;
-    varying vec2 n3;
-    varying vec2 n4;
-    varying vec2 n5;
+    varying vec2 northWestPos;
+    varying vec2 northEastPos;
+    varying vec2 eastPos;
+    varying vec2 southEastPos;
+    varying vec2 southWestPos;
+    varying vec2 westPos;
 
     varying vec2 vTextureCoord;
 
-    uniform vec2 resolution;
     uniform mat3 projectionMatrix;
     uniform float size;
 
     void main() {
         vec2 widthStep = vec2(1.0/size, 0.0);
-        vec2 heightStep = vec2(0.0, 1.0/size);
-
         // @Wraning: The y axis is flipped
         // @REF: http://www.pouet.net/topic.php?which=8966
-        vec2 coord = vec2(aTextureCoord.x, aTextureCoord.y);
+        vec2 heightStep = vec2(0.0, 1.0/size);
+
+        float flippedY = projectionMatrix[1][1] < 0.0 ? 1.0 : 0.0;
+
+        vec2 coord = vec2(aTextureCoord.x, flippedY > 0.0 ? 1.0 - aTextureCoord.y : aTextureCoord.y);
         vTextureCoord = coord;
 
-        // centrePos = coord;
-        // n1 = coord + widthStep;
-        // northEastPos = coord + widthStep + heightStep;
-        // eastPos = coord - heightStep;
-        // southEastPos = coord - heightStep;
-        // southWestPos = coord - widthStep - heightStep;
-        // westPos = coord + heightStep;
-
         centrePos = coord;
-        n0 = coord + widthStep;
-        n1 = coord + heightStep;
-        n2 = coord - widthStep + heightStep;
-        n3 = coord - widthStep;
-        n4 = coord - heightStep;
-        n5 = coord + widthStep - heightStep;
+        northWestPos = coord + heightStep - widthStep;
+        northEastPos = coord + heightStep;
+        eastPos = coord + widthStep;
+        southEastPos = coord - heightStep + widthStep;
+        southWestPos = coord - heightStep;
+        westPos = coord - widthStep;
 
         gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     }
@@ -66,19 +54,20 @@ const snowflakeComputationFragmentShader = `
     precision highp float;
 
     varying vec2 centrePos;
-    varying vec2 n0;
-    varying vec2 n1;
-    varying vec2 n2;
-    varying vec2 n3;
-    varying vec2 n4;
-    varying vec2 n5;
+    varying vec2 northWestPos;
+    varying vec2 northEastPos;
+    varying vec2 eastPos;
+    varying vec2 southEastPos;
+    varying vec2 southWestPos;
+    varying vec2 westPos;
 
     varying vec2 vTextureCoord;
 
     uniform sampler2D uSampler;
+    uniform sampler2D snowflake;
     uniform mat3 mappedMatrix;
+    uniform vec4 filterArea;
     uniform float size;
-    uniform float uTime;
 
     uniform float rho;
     uniform float beta;
@@ -127,7 +116,7 @@ const snowflakeComputationFragmentShader = `
         return max(countAttachedHexOfBoundaryHex(cell, n), 0.0);
     }
 
-    vec4 diffusion(vec4 cell, vec4 n[6]) {
+    highp vec4 diffusion(vec4 cell, vec4 n[6]) {
         float totalMass = cell.r;
         bool isBoundary = isBoundaryHex(cell, n);
 
@@ -244,18 +233,21 @@ const snowflakeComputationFragmentShader = `
         vec4 cell;
         vec4 n[6];
 
+        // vec2 coord = vTextureCoord * filterArea.xy / vec2(size, size);
+        // vec2 coord = (vec3(vTextureCoord, 1.0) * mappedMatrix).xy;
+
         cell = texture2D(uSampler, centrePos);
 
         if (generation <= 1) {
           cell = initVapor(cell);
           gl_FragColor = cell;
         } else {
-          n[0] = texture2D(uSampler, n0);
-          n[1] = texture2D(uSampler, n1);
-          n[2] = texture2D(uSampler, n2);
-          n[3] = texture2D(uSampler, n3);
-          n[4] = texture2D(uSampler, n4);
-          n[5] = texture2D(uSampler, n5);
+          n[0] = texture2D(uSampler, northWestPos);
+          n[1] = texture2D(uSampler, northEastPos);
+          n[2] = texture2D(uSampler, eastPos);
+          n[3] = texture2D(uSampler, southEastPos);
+          n[4] = texture2D(uSampler, southWestPos);
+          n[5] = texture2D(uSampler, westPos);
 
           //float d = cell.r; // diffuse (vapor) mass
           //float c = cell.g; // crystal (ice) mass
@@ -284,159 +276,99 @@ const snowflakeComputationFragmentShader = `
         }
 
         // Map coord to color for debugging
-        // gl_FragColor = vec4(1.0, gold_noise(vTextureCoord, uTime), 0.0, 1.0);
-        // gl_FragColor = texture2D(uSampler, centrePos);
+        // gl_FragColor = vec4(vTextureCoord, 0.0, 1.0);
 
         // vec4 vDefineColor;
+
         // if (centrePos.x > 0.5) {
         //   vDefineColor = vec4(0.0, 0.0, 0.0, 0.3);
+
         //   if (centrePos.y > 0.5) {
         //     vDefineColor = vec4(0.0, 0.0, 0.0, 0.6);
         //   }
         // } else {
         //   vDefineColor = vec4(0.0, 0.0, 0.0, 1.0);
         // }
+
         // gl_FragColor = vDefineColor;
     }
 `
 
-interface ISpriteUniform extends IGrowthModelParameters {
-  size?: number,
+interface IFilterUniform extends IGrowthModelParameters {
+  resolution?: number[],
   step?: number,
   generation?: number
 }
 
-export class SnowflakeGrowthModelOnGPU extends BaseGrowthModel {
-  $computation: PIXI.Container
-  $sprite: ShaperSprite<ISpriteUniform>
-  renderTexture: PIXI.RenderTexture
-  renderTexture2: PIXI.RenderTexture
-  step: number
-  size: number
+class SnowflakeGrowthModelFilter extends PIXI.Filter<IFilterUniform> {
 
-  initialize () {
-    const { renderer } = this.options
+  constructor (options: IFilterUniform) {
+    super(snowflakeComputationVertexShader, snowflakeComputationFragmentShader)
 
-    this.size = this.options.snowflakeInput.rowCells
+    Object.keys(options).map(uniform => {
+      this.uniforms[uniform] = options[uniform]
+    })
 
-    const uniforms = {
-      ...this.options.snowflakeInput.parameters,
-      size: this.size
+    this.uniforms.resolution = [
+      options['size'],
+      options['size']
+    ]
+
+    this.uniforms.snowflake = {
+      type: 'sampler2d',
+      value: null
     }
 
-    createShaderPlugin(
-      'snowflakeGrowthModel',
-      snowflakeComputationVertexShader,
-      snowflakeComputationFragmentShader,
-      uniforms,
-      renderer
-    )
+    if (!this.uniforms.sigma) {
+      this.uniforms.sigma = 0.0
+    }
 
-    this.$sprite = createShaderPluginSprite(
-      'snowflakeGrowthModel',
-      new PIXI.Point(this.size, this.size),
-      uniforms
-    )
+    this.uniforms.mappedMatrix = new PIXI.Matrix()
 
+    this.uniforms.generation = 0
+  }
+
+  apply (
+    filterManager: PIXI.FilterManager,
+    input: PIXI.RenderTarget,
+    output: PIXI.RenderTarget
+  ) {
+    this.uniforms.mappedMatrix = filterManager.calculateNormalizedScreenSpaceMatrix(this.uniforms.mappedMatrix)
+    filterManager.applyFilter(this, input, output)
+  }
+
+}
+
+export class SnowflakeGrowthModelOnGPU extends BaseGrowthModel {
+  $computation: PIXI.Container
+  shader: SnowflakeGrowthModelFilter
+  step: number
+
+  initialize () {
+    this.shader = new SnowflakeGrowthModelFilter({
+      ...this.options.snowflakeInput.parameters,
+      size: this.options.snowflakeInput.rowCells
+    })
     this.step = 0
-
-    this.setupGrowthComputation()
-  }
-
-  setupGrowthComputation () {
-    const { renderer } = this.options
-    const { rho } = this.snowflakeData.parameters
-    const { gl } = renderer
-
-    this.$computation = new PIXI.Container()
-    this.renderTexture = PIXI.RenderTexture.create(this.size, this.size)
-    this.renderTexture2 = PIXI.RenderTexture.create(this.size, this.size)
-
-    const $initData = new PIXI.Graphics()
-    $initData
-      .beginFill(0x000000, 0)
-      .drawRect(0, 0, this.size, this.size)
-      .endFill()
-    $initData
-      .beginFill(0x00FF00)
-      .drawRect(this.size / 2, this.size / 2, 1, 1)
-      .endFill()
-
-    // @TODO: Generate data texture as baseTexture source
-    // const initData = new Float32Array(4 * this.size * this.size)
-
-    // for (var i = 0; i < initData.length; i += 4) {
-    //   initData[i] = rho
-    //   initData[i + 1] = 0.0
-    //   initData[i + 2] = 0.0
-    //   initData[i + 3] = 0.0
-    // }
-
-    // const iceSeed = (this.centerSize * this.size + this.centerSize) * 4
-    // initData[iceSeed] = 0.0
-    // initData[iceSeed + 1] = 1.0
-    // initData[iceSeed + 2] = 0.0
-    // initData[iceSeed + 3] = 1.0
-
-    // const initDataFrameBuffer = PIXI.glCore.GLFramebuffer.createFloat32(
-    //   renderer.gl,
-    //   this.size,
-    //   this.size,
-    //   initData
-    // )
-
-    this.$sprite.addChild($initData)
-    this.$computation.addChild(this.$sprite)
-
-    // setInterval(() => {
-    //   if (this.$growthComputationSprite.children.length) {
-    //     this.$growthComputationSprite.removeChildren()
-    //   }
-    //   const pixels = renderer.extract.pixels(this.renderTexture2)
-    //   console.log(pixels.slice(this.centerSize * this.centerSize * 4))
-    // }, 2000)
-
-    // console.log(renderer, this.renderTexture)
-  }
-
-  extractComputationPixels () {
-    const { renderer } = this.options
-
-    return renderer.extract.pixels(this.$computation)
   }
 
   growth () {
-    const { renderer } = this.options
-
     if (this.status !== 'growthing') {
+      this.shader.enabled = false
       return
     }
 
-    if (this.$sprite.pluginUniforms.generation > 1) {
-      this.$sprite.removeChildren()
-    }
+    this.shader.enabled = true
 
     this.step++
 
     if (this.step > 3) {
       this.step = 1
       this.evolveGeneration()
-      this.$sprite.pluginUniforms.generation = this.snowflakeData.generation
+      this.shader.uniforms.generation = this.snowflakeData.generation
     }
 
-    this.$sprite.pluginUniforms.step = this.step
-
-    // Swap the buffers
-    const temp = this.renderTexture
-    this.renderTexture = this.renderTexture2
-    this.renderTexture2 = temp
-
-    // set the new texture
-    this.$sprite.texture = this.renderTexture
-
-    // render the growthComputation to the texture
-    // the 'true' clears the texture before the content is rendered
-    renderer.render(this.$computation, this.renderTexture2)
+    this.shader.uniforms.step = this.step
   }
 
 }

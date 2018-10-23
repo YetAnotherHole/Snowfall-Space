@@ -1,5 +1,5 @@
 // Styles
-export const FONT_FAMILY = 'Pingfang SC'
+export const FONT_FAMILY = 'Pingfang SC, system-ui'
 export const COLORS = {
   // Neural
   BLACK: 0x000000,
@@ -12,7 +12,8 @@ export const COLORS = {
   // Colorful
   YELLOW_700: 0xFBC02D, // Material Design
   SOFT_YELLOW: 0xF0E38D,
-  DARK_CYAN: 0x76A4AB
+  DARK_CYAN: 0x1a1a1a, // 0x76A4AB
+  DARK_BLUE: 0x7695AB
 }
 
 // Etc

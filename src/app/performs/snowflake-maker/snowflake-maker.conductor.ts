@@ -1,12 +1,15 @@
 import {
   BaseConductor,
   SnowflakeGrowthModelOnGPU,
-  $$GrowthModel2DRender, GrowthModel3DRender
+  SnowflakeGrowthModelOnCore,
+  growthModelParametersPresetsMap,
+  $$GrowthModel2DRender, $$GrowthModel2DRenderLegacy, GrowthModel3DRender
 } from '../shared'
 import { __ } from '../../services/i18n'
 import { FONT_FAMILY, COLORS } from '../../utils/constants'
 
-const IS_3D_VIEW = false
+const ENABLE_LEGACY = false
+const IS_3D_VIEW = !ENABLE_LEGACY && false
 
 export class SnowflakeMakerConductor extends BaseConductor {
   $loading: PIXI.Text
@@ -24,29 +27,34 @@ export class SnowflakeMakerConductor extends BaseConductor {
   }
 
   setupSnowflakeModel () {
-    this.snowflakeGrowthModel = new SnowflakeGrowthModelOnGPU({
-      snowflakeInput: {
-        rowCells: 300, // 700
-        hexSize: 1,
-        parameters: {
-          rho: 0.58,
-          beta: 2.0,
-          alpha: Math.random() * 0.3,
-          theta: Math.random() * 0.5595 + 0.02,
-          kappa: Math.random() * 0.05,
-          mu: Math.random() * 0.01,
-          gamma: 0.0000515,
-          sigma: 0 // Math.random() * - 0.5
+    if (ENABLE_LEGACY) {
+      this.snowflakeGrowthModel = new SnowflakeGrowthModelOnCore({
+        renderer: this.app.renderer,
+        snowflakeInput: {
+          rowCells: 31,
+          hexSize: 10,
+          parameters: growthModelParametersPresetsMap.default
         }
-      }
-    })
+      })
+    } else {
+      this.snowflakeGrowthModel = new SnowflakeGrowthModelOnGPU({
+        renderer: this.app.renderer,
+        snowflakeInput: {
+          rowCells: 501, // 701
+          hexSize: 1,
+          parameters: growthModelParametersPresetsMap.fernlike
+        }
+      })
+    }
 
     if (IS_3D_VIEW) {
       this.growthModel3DRender = new GrowthModel3DRender({
         growthModel: this.snowflakeGrowthModel
       })
     } else {
-      this.$$growthModel2DRender = new $$GrowthModel2DRender({
+      const Class = ENABLE_LEGACY ? $$GrowthModel2DRenderLegacy : $$GrowthModel2DRender
+      this.$$growthModel2DRender = new Class({
+        renderer: this.app.renderer,
         growthModel: this.snowflakeGrowthModel
       })
 
@@ -62,11 +70,12 @@ export class SnowflakeMakerConductor extends BaseConductor {
 
     guiController.add(this.snowflakeGrowthModel.snowflakeData, 'generation')
     guiController.add(this.snowflakeGrowthModel.snowflakeData.parameters, 'rho')
+    guiController.add(this.snowflakeGrowthModel.snowflakeData.parameters, 'beta')
   }
 
   onresize (width: number, height: number) {
     if (IS_3D_VIEW) {
-      // @TODO: handle resize
+      // @TODO: handle 3D view resize
     } else {
       this.$$growthModel2DRender.onresize(width, height)
     }
@@ -74,7 +83,7 @@ export class SnowflakeMakerConductor extends BaseConductor {
 
   update () {
     if (IS_3D_VIEW) {
-      // @TODO: handle update
+      // @TODO: handle 3D view update
     } else {
       this.$$growthModel2DRender.update()
     }

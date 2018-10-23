@@ -2,15 +2,7 @@
 // Based on paper: MODELING SNOW CRYSTAL GROWTH II: A mesoscopic lattice map with plausible dynamics
 // @See Paper: http://psoup.math.wisc.edu/papers/h2l.pdf
 // @See Website: http://psoup.math.wisc.edu/Snowfakes.htm
-
-import { defineGrid, extendHex } from 'honeycomb-grid'
-import {
-  ISnowflakeSchema, SnowflakeHex,
-  GROWTH_MODEL_MAX_GENERATION, UNIT_GRID_HEX_COUNT, DEFAULT_HEX_SIZE,
-  BaseGrowthModel
-} from './base'
-import { randomChoice } from '../../../utils/random'
-
+// @Use Case: Small amount of grid cells
 // Example Code:
 // this.snowflakeGrowthModel = new SnowflakeGrowthModelOnGPU({
 //   snowflakeInput: {
@@ -28,6 +20,14 @@ import { randomChoice } from '../../../utils/random'
 //     }
 //   }
 // })
+
+import { defineGrid, extendHex } from 'honeycomb-grid'
+import {
+  ISnowflakeSchema, SnowflakeHex,
+  GROWTH_MODEL_MAX_GENERATION, UNIT_GRID_HEX_COUNT, DEFAULT_HEX_SIZE,
+  BaseGrowthModel
+} from './base'
+import { randomChoice } from '../../../utils/random'
 
 export class SnowflakeGrowthModelOnCore extends BaseGrowthModel {
 
@@ -126,8 +126,8 @@ export class SnowflakeGrowthModelOnCore extends BaseGrowthModel {
     this.grid.map(hex => {
       const $isBoundary = this.isBoundaryHex(hex)
       if ($isBoundary) {
-        hex.boundaryMass = hex.boundaryMass + (1 - kappa) * hex.diffusiveMass
-        hex.crystalMass = hex.crystalMass + kappa * hex.diffusiveMass
+        hex.boundaryMass += hex.diffusiveMass * (1 - kappa)
+        hex.crystalMass += hex.diffusiveMass * kappa
         hex.diffusiveMass = 0
       }
     })
@@ -145,7 +145,7 @@ export class SnowflakeGrowthModelOnCore extends BaseGrowthModel {
 
       // @Case A: A boundary site with 1 or 2 attached neighbors needs boundary
       // mass at least β to join the crystal:
-      if (countAttachedHex <= 2 && hex.boundaryMass > beta) {
+      if (countAttachedHex <= 2 && hex.boundaryMass >= beta) {
         hex.attached = true
       }
       // @Case B: A boundary site with 3 attached neighbors joins the crystal if either:
@@ -156,7 +156,8 @@ export class SnowflakeGrowthModelOnCore extends BaseGrowthModel {
         }
         // - it has diffusive mass < θ in its neighborhood and
         // it has boundary mass ≥ α:
-        if (hex.boundaryMass > alpha && this.totalDiffusiveMass(hex) < theta) {
+        const nearbyVapour = this.totalDiffusiveMass(hex) - hex.diffusiveMass
+        if (hex.boundaryMass > alpha && nearbyVapour < theta) {
           hex.attached = true
         }
       }
@@ -181,9 +182,9 @@ export class SnowflakeGrowthModelOnCore extends BaseGrowthModel {
       if ($isBoundary) {
         // Proportion μ of the boundary mass and proportion γ of the crystal
         // mass at each boundary site become diffusive mass
+        hex.diffusiveMass += hex.boundaryMass * mu + hex.crystalMass * gamma
         hex.boundaryMass = hex.boundaryMass * (1 - mu)
         hex.crystalMass = hex.crystalMass * (1 - gamma)
-        hex.diffusiveMass = hex.diffusiveMass + hex.boundaryMass * mu + hex.crystalMass * gamma
       }
     })
   }
@@ -196,7 +197,7 @@ export class SnowflakeGrowthModelOnCore extends BaseGrowthModel {
   private stepNoise () {
     const { sigma } = this.snowflakeData.parameters
 
-    if (sigma === 0) {
+    if (!sigma || sigma === 0) {
       return
     }
 
@@ -248,15 +249,6 @@ export class SnowflakeGrowthModelOnCore extends BaseGrowthModel {
     })
 
     return isBoundary
-  }
-
-  private evolveGeneration () {
-    this.snowflakeData.generation++
-    const $hasNextGeneration = this.snowflakeData.generation <= GROWTH_MODEL_MAX_GENERATION
-
-    if (!$hasNextGeneration) {
-      this.updateStatus('completed')
-    }
   }
 
 }
