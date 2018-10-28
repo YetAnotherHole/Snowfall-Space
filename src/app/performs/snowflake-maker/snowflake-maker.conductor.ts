@@ -1,3 +1,4 @@
+import { autobind } from 'core-decorators'
 import {
   BaseConductor,
   SnowflakeGrowthModelOnGPU,
@@ -40,9 +41,10 @@ export class SnowflakeMakerConductor extends BaseConductor {
       this.snowflakeGrowthModel = new SnowflakeGrowthModelOnGPU({
         renderer: this.app.renderer,
         snowflakeInput: {
-          rowCells: 501, // 701
+          // @TODO: Support small mobile screen the width is less than 701
+          rowCells: 501, // 501
           hexSize: 1,
-          parameters: growthModelParametersPresetsMap.fernlike
+          parameters: growthModelParametersPresetsMap.default
         }
       })
     }
@@ -62,15 +64,58 @@ export class SnowflakeMakerConductor extends BaseConductor {
     }
 
     this.snowflakeGrowthModel.updateStatus('growthing')
+
     this.alignCenterAndMiddle(this.$$growthModel2DRender.$object)
+    this.onresize(this.app.screen.width, this.app.screen.height)
   }
 
   setupGuiController () {
     const guiController = this.datGUI
+    const rememberedData = {
+      Default: {
+        0: growthModelParametersPresetsMap.default
+      }
+    }
 
-    guiController.add(this.snowflakeGrowthModel.snowflakeData, 'generation')
-    guiController.add(this.snowflakeGrowthModel.snowflakeData.parameters, 'rho')
-    guiController.add(this.snowflakeGrowthModel.snowflakeData.parameters, 'beta')
+    Object.keys(growthModelParametersPresetsMap).map(key => {
+      if (key !== 'default') {
+        rememberedData[key] = {
+          0: growthModelParametersPresetsMap[key]
+        }
+      }
+    })
+
+    guiController.load['remembered'] = rememberedData
+    guiController.remember(growthModelParametersPresetsMap.default)
+
+    guiController.add(this.snowflakeGrowthModel.snowflakeData, 'generation').listen()
+    guiController.add(this.snowflakeGrowthModel.snowflakeData.parameters, 'rho', 0.25, 1.2).onChange(this.resetGrowthModel)
+    guiController.add(this.snowflakeGrowthModel.snowflakeData.parameters, 'beta', 0.699, 3.1).onChange(this.resetGrowthModel)
+
+    const rest = guiController.addFolder('Rest...')
+    rest.add(this.snowflakeGrowthModel.snowflakeData.parameters, 'alpha', 0.00001, 0.4).onChange(this.resetGrowthModel)
+    rest.add(this.snowflakeGrowthModel.snowflakeData.parameters, 'theta', 0.002, 0.09).onChange(this.resetGrowthModel)
+    rest.add(this.snowflakeGrowthModel.snowflakeData.parameters, 'kappa', 0.000001, 0.09).onChange(this.resetGrowthModel)
+    rest.add(this.snowflakeGrowthModel.snowflakeData.parameters, 'mu', 0.01, 0.2).onChange(this.resetGrowthModel)
+    rest.add(this.snowflakeGrowthModel.snowflakeData.parameters, 'gamma', 0.000001, 0.00005).onChange(this.resetGrowthModel)
+    rest.add(this.snowflakeGrowthModel.snowflakeData.parameters, 'sigma', 0, 0.2).listen().onChange(this.resetGrowthModel)
+
+    const visual = guiController.addFolder('Visual')
+    visual.open()
+    visual.add(this.snowflakeGrowthModel.snowflakeData, 'theme', [ 'gray', 'mono', 'ice', 'hyaline', 'fantasy' ]).onFinishChange(this.setGrowthVisual)
+    visual.add(this.$$growthModel2DRender.shader.uniforms, 'maxBeta').listen()
+    visual.add(this.$$growthModel2DRender.shader.uniforms, 'curveBeta')
+  }
+
+  @autobind
+  resetGrowthModel () {
+    this.snowflakeGrowthModel.reset()
+    this.$$growthModel2DRender.shader.uniforms.maxBeta = this.snowflakeGrowthModel.snowflakeData.parameters.beta + 0.1
+  }
+
+  @autobind
+  setGrowthVisual () {
+    this.$$growthModel2DRender.updateVisualUniformByTheme()
   }
 
   onresize (width: number, height: number) {
@@ -87,7 +132,7 @@ export class SnowflakeMakerConductor extends BaseConductor {
     } else {
       this.$$growthModel2DRender.update()
     }
-    this.datGUI.updateDisplay()
+    // this.datGUI.updateDisplay()
   }
 
   showLoading () {

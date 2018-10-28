@@ -51,12 +51,12 @@ const snowflakeComputationVertexShader = `
         // westPos = coord + heightStep;
 
         centrePos = coord;
-        n0 = coord + widthStep;
-        n1 = coord + heightStep;
-        n2 = coord - widthStep + heightStep;
-        n3 = coord - widthStep;
-        n4 = coord - heightStep;
-        n5 = coord + widthStep - heightStep;
+        n0 = coord - heightStep + widthStep;
+        n1 = coord - heightStep;
+        n2 = coord - widthStep;
+        n3 = coord + heightStep - widthStep;
+        n4 = coord + heightStep;
+        n5 = coord + widthStep;
 
         gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
     }
@@ -279,7 +279,7 @@ const snowflakeComputationFragmentShader = `
               cell = melting(cell, n);
               gl_FragColor = sigma != 0.0 ? noise(cell, n) : cell;
           } else {
-            gl_FragColor = cell;
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 0.6);
           }
         }
 
@@ -315,6 +315,11 @@ export class SnowflakeGrowthModelOnGPU extends BaseGrowthModel {
   size: number
 
   initialize () {
+    this.setupRenderPlugin()
+    this.setupGrowthComputation()
+  }
+
+  setupRenderPlugin () {
     const { renderer } = this.options
 
     this.size = this.options.snowflakeInput.rowCells
@@ -339,8 +344,6 @@ export class SnowflakeGrowthModelOnGPU extends BaseGrowthModel {
     )
 
     this.step = 0
-
-    this.setupGrowthComputation()
   }
 
   setupGrowthComputation () {
@@ -348,9 +351,17 @@ export class SnowflakeGrowthModelOnGPU extends BaseGrowthModel {
     const { rho } = this.snowflakeData.parameters
     const { gl } = renderer
 
-    this.$computation = new PIXI.Container()
-    this.renderTexture = PIXI.RenderTexture.create(this.size, this.size)
-    this.renderTexture2 = PIXI.RenderTexture.create(this.size, this.size)
+    if (this.$computation) {
+      this.$computation.removeChildren()
+    } else {
+      this.$computation = new PIXI.Container()
+    }
+
+    const textureResolution = 2 || window.devicePixelRatio
+    const textureArgs = [ this.size, this.size, PIXI.SCALE_MODES.NEAREST, textureResolution ]
+
+    this.renderTexture = PIXI.RenderTexture.create(...textureArgs)
+    this.renderTexture2 = PIXI.RenderTexture.create(...textureArgs)
 
     const $initData = new PIXI.Graphics()
     $initData
@@ -405,6 +416,12 @@ export class SnowflakeGrowthModelOnGPU extends BaseGrowthModel {
     return renderer.extract.pixels(this.$computation)
   }
 
+  reset () {
+    this.snowflakeData.generation = 0
+    this.setupRenderPlugin()
+    this.setupGrowthComputation()
+  }
+
   growth () {
     const { renderer } = this.options
 
@@ -420,8 +437,8 @@ export class SnowflakeGrowthModelOnGPU extends BaseGrowthModel {
 
     if (this.step > 3) {
       this.step = 1
-      this.evolveGeneration()
       this.$sprite.pluginUniforms.generation = this.snowflakeData.generation
+      this.evolveGeneration()
     }
 
     this.$sprite.pluginUniforms.step = this.step

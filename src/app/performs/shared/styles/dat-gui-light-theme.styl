@@ -43,6 +43,9 @@
     li:not(.folder)
       border-bottom-width: 0 !important
 
+    li.folder + .folder
+      border: none !important
+
 .dg li:not(.folder)
   padding: 0px 4px 0 12px !important
   background: #fafafa !important
@@ -51,9 +54,16 @@
 .dg li.save-row .button
   text-shadow: none !important
 
+  &.gears
+    width: 16px !important
+    height: 16px !important
+
 .dg li.folder
   border: none !important
   border-radius: 0 !important
+
+  + .folder
+    border-top: 1px solid #ddd !important
 
   li
     padding-left: 25px !important
@@ -63,6 +73,9 @@
 
 .dg li.title
   background: #e5e5e5 !important
+
+.dg .cr.string
+  border-left: none !important
 
 .dg .cr.number
   border-left: none !important

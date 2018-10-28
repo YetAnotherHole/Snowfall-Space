@@ -37,6 +37,7 @@ interface IGrowthModelEnv {
 }
 
 export interface ISnowflakeSchema extends IGrowthModelEnv {
+  theme: string
   // Generated
   generation: number // Iteration steps
   classification: string
@@ -69,6 +70,7 @@ export abstract class BaseGrowthModel {
       this.snowflakeData = snowflakeInput
     } else {
       this.snowflakeData = {
+        theme: 'gray', // hyaline
         ...snowflakeInput,
         generation: 0,
         classification: 'TODO',
@@ -80,6 +82,7 @@ export abstract class BaseGrowthModel {
   }
 
   abstract initialize (): void
+  abstract reset (): void
   abstract growth (): void
   // Optional abstract
   computedImageUrl? (): string

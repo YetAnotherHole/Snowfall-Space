@@ -156,6 +156,13 @@ export default class extends Vue {
   &.watercolor-witcher
     background-color: $darkCyan
 
+  &.snowflake-maker
+    .dg .slider
+      width: 46% !important
+
+    .dg .cr.number input[type=text]
+      width: 50% !important
+
   [class*='-layer']
     transition: all 318ms
     position: absolute
