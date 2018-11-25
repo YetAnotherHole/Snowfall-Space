@@ -1,6 +1,6 @@
 // Yet Another Gravner & Griffeath Quadratic Lattice Model
 // But based on the GPU
-// @TODO: Optimize FPS for growthing a snowflake within a opus period
+// @TODO: Optimize FPS for growthing a snowflake within an opus period
 
 import * as PIXI from 'pixi.js'
 import {

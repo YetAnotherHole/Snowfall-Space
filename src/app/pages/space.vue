@@ -65,7 +65,7 @@ export default class extends Vue {
 
     .tips-background
       width: 306px
-      height: 325px
+      height: 304px
       padding: 20px
       background: $white
       box-shadow: 2px 3px 0 2px rgba(0, 0, 0, 0.1)
@@ -75,8 +75,8 @@ export default class extends Vue {
       height: 200px
 
      .info-text
-       color: $black
-       margin-top: 20px
+       color: $gray50
+       margin-top: 12px
        text-align: center
 
        a
