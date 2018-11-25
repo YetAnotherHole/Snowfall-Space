@@ -77,6 +77,15 @@ export class SnowflakeGrowthModelOnCore extends BaseGrowthModel {
     }
   }
 
+  setupGrowthGrid () {
+    this.initGrid()
+  }
+
+  reset () {
+    this.snowflakeData.generation = 0
+    this.setupGrowthGrid()
+  }
+
   /**
    * Steps of growth in every generation:
    * 1. Diffusion

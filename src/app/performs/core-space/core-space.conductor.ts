@@ -8,7 +8,6 @@ interface IOnMountOptions {
 class CoreSpaceConductor extends BaseConductor {
 
   setup () {
-
   }
 
   onmount (options: IOnMountOptions = {}) {

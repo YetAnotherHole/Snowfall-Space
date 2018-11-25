@@ -16,4 +16,7 @@ export const COLORS = {
   DARK_BLUE: 0x7695AB
 }
 
+// LINKS
+export const PROJECT_URL = 'https://github.com/YetAnotherHole/Snowfall-Space'
+
 // Etc

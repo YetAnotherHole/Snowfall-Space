@@ -32,8 +32,8 @@ export class SnowflakeMakerConductor extends BaseConductor {
       this.snowflakeGrowthModel = new SnowflakeGrowthModelOnCore({
         renderer: this.app.renderer,
         snowflakeInput: {
-          rowCells: 31,
-          hexSize: 10,
+          rowCells: 20,
+          hexSize: 15,
           parameters: growthModelParametersPresetsMap.default
         }
       })
@@ -100,17 +100,21 @@ export class SnowflakeMakerConductor extends BaseConductor {
     rest.add(this.snowflakeGrowthModel.snowflakeData.parameters, 'gamma', 0.000001, 0.00005).onChange(this.resetGrowthModel)
     rest.add(this.snowflakeGrowthModel.snowflakeData.parameters, 'sigma', 0, 0.2).listen().onChange(this.resetGrowthModel)
 
-    const visual = guiController.addFolder('Visual')
-    visual.open()
-    visual.add(this.snowflakeGrowthModel.snowflakeData, 'theme', [ 'gray', 'mono', 'ice', 'hyaline', 'fantasy' ]).onFinishChange(this.setGrowthVisual)
-    visual.add(this.$$growthModel2DRender.shader.uniforms, 'maxBeta').listen()
-    visual.add(this.$$growthModel2DRender.shader.uniforms, 'curveBeta')
+    if (this.$$growthModel2DRender.shader) {
+      const visual = guiController.addFolder('Visual')
+      visual.open()
+      visual.add(this.snowflakeGrowthModel.snowflakeData, 'theme', [ 'gray', 'mono', 'ice', 'hyaline', 'fantasy' ]).onFinishChange(this.setGrowthVisual)
+      visual.add(this.$$growthModel2DRender.shader.uniforms, 'maxBeta').listen()
+      visual.add(this.$$growthModel2DRender.shader.uniforms, 'curveBeta')
+    }
   }
 
   @autobind
   resetGrowthModel () {
     this.snowflakeGrowthModel.reset()
-    this.$$growthModel2DRender.shader.uniforms.maxBeta = this.snowflakeGrowthModel.snowflakeData.parameters.beta + 0.1
+    if (this.$$growthModel2DRender.shader) {
+      this.$$growthModel2DRender.shader.uniforms.maxBeta = this.snowflakeGrowthModel.snowflakeData.parameters.beta + 0.1
+    }
   }
 
   @autobind

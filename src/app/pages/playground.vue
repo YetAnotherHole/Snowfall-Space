@@ -17,6 +17,8 @@
           @click="handleSwitchPerformClick"
         )
           span {{ perform.title }}
+        li( @click="handleOpenSourceClick" )
+          span {{ $t('app.openSource') }}
 
     .playground-name
       | {{ currentPerform.title }}
@@ -34,6 +36,7 @@ import { Route } from 'vue-router'
 
 import { __ } from '../services/i18n'
 import { PATHS } from '../router'
+import { PROJECT_URL } from '../utils/constants'
 import {
   BaseConductor,
   ShamisenRainConductor,
@@ -124,6 +127,10 @@ export default class extends Vue {
 
   handleReturnAppClick () {
     this.$router.push(PATHS.APP)
+  }
+
+  handleOpenSourceClick () {
+    window.open(PROJECT_URL, true)
   }
 
   handleSwitchPerformClick (event: any) {
