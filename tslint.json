@@ -1,9 +1,0 @@
-{
-  "defaultSeverity": "error",
-  "extends": ["tslint-config-standard"],
-  "exclude": ["node_modules", "dist"],
-  "rules": {
-    "no-empty": false,
-    "no-unused-variable": false
-  }
-}
